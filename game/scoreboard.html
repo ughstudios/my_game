@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scoreboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Scoreboard</h1>
+  <ul id="scores"></ul>
+  <script>
+    async function loadScores() {
+      const res = await fetch('/api/scores');
+      const scores = await res.json();
+      const list = document.getElementById('scores');
+      list.innerHTML = '';
+      scores.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = `${s.name}: ${s.score}`;
+        list.appendChild(li);
+      });
+    }
+    loadScores();
+  </script>
+</body>
+</html>

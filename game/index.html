@@ -9,6 +9,12 @@
 </head>
 <body>
     <div id="info">WASD to move, Mouse to look around, SPACE to shoot</div>
+    <div id="score" style="position:absolute;top:10px;right:10px;color:white;font-family:Arial"></div>
+    <div id="submit" style="position:absolute;top:40px;right:10px;display:flex;gap:4px;">
+      <input id="player-name" placeholder="Name" style="padding:2px" />
+      <button id="save-score">Submit Score</button>
+      <a href="scoreboard.html" style="color:white;">View Scores</a>
+    </div>
     <script src="../three.min.js"></script>
     <script src="../PointerLockControls.js"></script>
     <script src="game.js"></script>
