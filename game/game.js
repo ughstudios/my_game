@@ -42,7 +42,7 @@ const wallMaterial = new THREE.MeshStandardMaterial({
 });
 
 // Create walls with collision
-function createWall(x, y, z, width = 10, height = 5, depth = 1, isInvisible = false) {
+function createWall(x, y, z, width = 10, height = 5, depth = 1, isInvisible = false, type = 'wall') {
     // Create visual mesh
     const wallGeometry = new THREE.BoxGeometry(width, height, depth);
     const material = isInvisible 
@@ -73,7 +73,8 @@ function createWall(x, y, z, width = 10, height = 5, depth = 1, isInvisible = fa
         position: new THREE.Vector3(x, y, z),
         width: width,
         height: height,
-        depth: depth
+        depth: depth,
+        type: type
     });
     
     return wall;
@@ -98,8 +99,8 @@ wallPositions.forEach(pos => {
 
 // Add boundary walls with proper collision
 // Floor and ceiling (invisible but with collision)
-createWall(0, 2.5, 0, 50, 5, 50, true);  // Floor
-createWall(0, 10, 0, 50, 0.1, 50, true); // Ceiling
+createWall(0, 0, 0, 50, 0.1, 50, true, 'floor');
+createWall(0, 10, 0, 50, 0.1, 50, true, 'ceiling');
 
 // Boundary walls (visible)
 createWall(0, 6.25, -25, 50, 12.5, 1);   // Front wall
@@ -128,7 +129,7 @@ const player = {
 };
 
 // Check if a position collides with any object
-function checkCollision(position, radius = player.radius, ignoreType = null) {
+function checkCollision(position, radius = player.radius, ignoreTypes = []) {
     // Create a sphere for collision checking
     const sphere = new THREE.Sphere(
         new THREE.Vector3(position.x, position.y, position.z),
@@ -137,13 +138,7 @@ function checkCollision(position, radius = player.radius, ignoreType = null) {
     
     // Check collision with all objects
     for (const obj of collisionObjects) {
-        // Skip ignored object types
-        if (ignoreType && obj.type === ignoreType) continue;
-        
-        // Skip floor and ceiling for movement (handled separately)
-        if (obj.mesh && (obj.mesh.position.y === 2.5 || obj.mesh.position.y === 10)) {
-            continue;
-        }
+        if (ignoreTypes.includes(obj.type)) continue;
         
         // Create a temporary box for collision checking
         const box = new THREE.Box3().copy(obj.box);
@@ -300,7 +295,7 @@ function animate() {
             bullet.update();
             
             // Check for bullet collisions
-            const collision = checkCollision(newPosition, 0.2, 'bullet');
+            const collision = checkCollision(newPosition, 0.2, ['bullet']);
             if (collision.collided) {
                 // Handle collision based on object type
                 if (collision.object.type === 'enemy' && bullet.owner === 'player') {
@@ -337,21 +332,17 @@ function animate() {
         player.verticalVelocity -= player.gravity;
         
         // Check if player is on ground
-        const groundCheckPosition = new THREE.Vector3(
-            camera.position.x,
-            camera.position.y - 2.1, // Slightly below player's feet
-            camera.position.z
+        const groundSphere = new THREE.Sphere(
+            new THREE.Vector3(camera.position.x, camera.position.y - player.height, camera.position.z),
+            player.radius
         );
-        
-        const wasOnGround = player.isOnGround;
+
         player.isOnGround = false;
-        
         for (const obj of collisionObjects) {
-            if (obj.mesh && obj.mesh.position.y < camera.position.y - 1.5) {
-                const playerSphere = new THREE.Sphere(groundCheckPosition, 0.4);
-                if (obj.box.intersectsSphere(playerSphere)) {
+            if (obj.type === 'floor') {
+                if (obj.box.intersectsSphere(groundSphere)) {
                     player.isOnGround = true;
-                    player.verticalVelocity = 0;
+                    if (player.verticalVelocity < 0) player.verticalVelocity = 0;
                     break;
                 }
             }
@@ -387,7 +378,7 @@ function animate() {
             newPosition.add(moveDirection.multiplyScalar(player.moveSpeed));
             
             // Check for collisions with all objects except the gun
-            const collision = checkCollision(newPosition, player.radius, 'player_gun');
+            const collision = checkCollision(newPosition, player.radius, ['player_gun','floor','ceiling']);
             
             if (!collision.collided) {
                 // No collision, move freely
@@ -404,14 +395,14 @@ function animate() {
                 const xMove = new THREE.Vector3(moveDirection.x, 0, 0);
                 const xPosition = new THREE.Vector3().copy(camera.position).add(xMove.multiplyScalar(player.moveSpeed));
                 
-                if (!checkCollision(xPosition, player.radius, 'player_gun').collided) {
+                if (!checkCollision(xPosition, player.radius, ['player_gun','floor','ceiling']).collided) {
                     camera.position.copy(xPosition);
                 } else {
                     // Try moving just along Z axis (forward/back)
                     const zMove = new THREE.Vector3(0, 0, moveDirection.z);
                     const zPosition = new THREE.Vector3().copy(camera.position).add(zMove.multiplyScalar(player.moveSpeed));
                     
-                    if (!checkCollision(zPosition, player.radius, 'player_gun').collided) {
+                    if (!checkCollision(zPosition, player.radius, ['player_gun','floor','ceiling']).collided) {
                         camera.position.copy(zPosition);
                     }
                 }
@@ -439,7 +430,7 @@ function animate() {
 }
 
 // Start animation loop
-camera.position.y = 2;
+camera.position.y = player.height;
 animate();
 
 // Enemies array
@@ -465,7 +456,7 @@ for (let i = 0; i < 5; i++) {
         );
         
         // Check if position is valid (not inside walls or other objects)
-        const collision = checkCollision(position, 1.5, 'enemy');
+        const collision = checkCollision(position, 1.5, ['enemy']);
         if (!collision.collided) {
             validPosition = true;
             enemy.position.copy(position);
