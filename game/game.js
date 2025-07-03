@@ -184,11 +184,16 @@ window.addEventListener('resize', () => {
 });
 
 // Pointer lock controls
-document.addEventListener('click', () => {
+// Allow both mouse click and any key press to initiate pointer lock so the
+// game starts even if the user begins with a keyboard interaction.
+function requestPointerLock() {
     if (!document.pointerLockElement) {
         controls.lock();
     }
-});
+}
+
+document.addEventListener('click', requestPointerLock);
+document.addEventListener('keydown', requestPointerLock);
 
 // Movement controls
 const onKeyDown = (event) => {
