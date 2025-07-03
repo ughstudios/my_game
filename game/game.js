@@ -33,13 +33,20 @@ scene.add(floor);
 
 // Collision objects
 const collisionObjects = [];
-const wallMaterial = new THREE.MeshStandardMaterial({ 
+const wallMaterial = new THREE.MeshStandardMaterial({
     color: 0x555555,
     roughness: 0.7,
     metalness: 0.3,
     transparent: true,
     opacity: 0.8
 });
+
+// Score handling
+let playerScore = 0;
+function updateScoreDisplay() {
+    const el = document.getElementById('score');
+    if (el) el.textContent = `Score: ${playerScore}`;
+}
 
 // Create walls with collision
 function createWall(x, y, z, width = 10, height = 5, depth = 1, isInvisible = false, type = 'wall') {
@@ -317,6 +324,8 @@ function animate() {
                         if (objIndex > -1) {
                             collisionObjects.splice(objIndex, 1);
                         }
+                        playerScore += 1;
+                        updateScoreDisplay();
                     }
                 }
                 
@@ -487,4 +496,25 @@ for (let i = 0; i < 5; i++) {
         }
         attempts++;
     }
+}
+
+// score submission handler
+updateScoreDisplay();
+const saveButton = document.getElementById('save-score');
+if (saveButton) {
+    saveButton.addEventListener('click', async () => {
+        const input = document.getElementById('player-name');
+        const name = input.value.trim();
+        if (!name) return;
+        try {
+            await fetch('/api/scores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, score: playerScore })
+            });
+        } catch (e) {
+            console.error('Failed to submit score', e);
+        }
+        input.value = '';
+    });
 }

@@ -2,9 +2,13 @@
   "name": "my_game",
   "version": "1.0.0",
   "scripts": {
-    "test": "node test/test-console.js"
+    "test": "node test/test-console.js",
+    "start": "node server.js"
   },
   "devDependencies": {
     "puppeteer": "^21.3.8"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
