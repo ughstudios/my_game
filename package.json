@@ -1,0 +1,10 @@
+{
+  "name": "my_game",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node test/test-console.js"
+  },
+  "devDependencies": {
+    "puppeteer": "^21.3.8"
+  }
+}

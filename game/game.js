@@ -293,7 +293,7 @@ function animate() {
         // Update bullets and check for collisions
         for (let i = bullets.length - 1; i >= 0; i--) {
             const bullet = bullets[i];
-            const newPosition = bullet.mesh.position.clone().add(bullet.userData.velocity);
+            const newPosition = bullet.mesh.position.clone().add(bullet.mesh.userData.velocity);
             
             // Update bullet position
             bullet.mesh.position.copy(newPosition);
